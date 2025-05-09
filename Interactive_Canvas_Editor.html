@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Canvas Circle Editor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Profile Information -->
+  <header>
+   <h1>Name: Dexter P. Ricarte</h1>
+    <p>Sex: Male</p>
+    <p>Address: Danlog, San Jose Camarines Sur </p>
+    <p>Course: BSIT, 2 B</p>
+    <p>School: Partido State University</p>
+    <p>Semester: 2nd Semester, Academic Year 2024-2025</p>
+    <p>Subject: PF2</p>
+    <p>Instructor: Prof. Arjay Abio
+  </header>
+
+  <!-- Canvas Container -->
+  <div class="canvas-container">
+    <canvas id="circleCanvas" width="600" height="400"></canvas>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+<!-- styles.css -->
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 20px;
+  }
+  header {
+    margin-bottom: 20px;
+  }
+  .canvas-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  canvas {
+    border: 1px solid #000;
+    background-color: #f9f9f9;
+    cursor: pointer;
+  }
+</style>
+
+<!-- script.js -->
+<script>
+  const canvas = document.getElementById('circleCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const circles = [];
+  let selectedCircle = null;
+  let isDragging = false;
+
+  // Helper function to draw all circles
+  function drawCircles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    circles.forEach(circle => {
+      ctx.beginPath();
+      ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+      ctx.fillStyle = circle === selectedCircle ? 'red' : 'blue';
+      ctx.fill();
+    });
+  }
+
+  // Get mouse position relative to canvas
+  function getMousePos(evt) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: evt.clientX - rect.left,
+      y: evt.clientY - rect.top
+    };
+  }
+
+  // Detect circle under the mouse
+  function getCircleAtPos(pos) {
+    return circles.find(circle => {
+      const dx = pos.x - circle.x;
+      const dy = pos.y - circle.y;
+      return Math.sqrt(dx * dx + dy * dy) <= circle.radius;
+    });
+  }
+
+  // Add circle on canvas click
+  canvas.addEventListener('click', function(evt) {
+    const pos = getMousePos(evt);
+    const clickedCircle = getCircleAtPos(pos);
+    if (clickedCircle) {
+      selectedCircle = clickedCircle;
+    } else {
+      circles.push({ x: pos.x, y: pos.y, radius: 20 });
+      selectedCircle = null;
+    }
+    drawCircles();
+  });
+
+  // Start dragging
+  canvas.addEventListener('mousedown', function(evt) {
+    const pos = getMousePos(evt);
+    if (getCircleAtPos(pos) === selectedCircle) {
+      isDragging = true;
+    }
+  });
+
+  // Drag selected circle
+  canvas.addEventListener('mousemove', function(evt) {
+    if (isDragging && selectedCircle) {
+      const pos = getMousePos(evt);
+      selectedCircle.x = pos.x;
+      selectedCircle.y = pos.y;
+      drawCircles();
+    }
+  });
+
+  // Stop dragging
+  canvas.addEventListener('mouseup', function() {
+    isDragging = false;
+  });
+
+  // Delete selected circle on Delete key
+  document.addEventListener('keydown', function(evt) {
+    if (evt.key === 'Delete' && selectedCircle) {
+      const index = circles.indexOf(selectedCircle);
+      if (index > -1) {
+        circles.splice(index, 1);
+        selectedCircle = null;
+        drawCircles();
+      }
+    }
+  });
+
+  // Resize with scroll wheel
+  canvas.addEventListener('wheel', function(evt) {
+    if (selectedCircle) {
+      evt.preventDefault();
+      const delta = evt.deltaY < 0 ? 1 : -1;
+      selectedCircle.radius = Math.max(5, selectedCircle.radius + delta);
+      drawCircles();
+    }
+  });
+</script>
